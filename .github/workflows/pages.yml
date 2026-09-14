@@ -1,0 +1,48 @@
+name: Build and deploy invitation
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: false
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Save original invitation photos
+        shell: bash
+        run: |
+          mkdir -p assets
+          if [ ! -f assets/venue.jpeg ]; then
+            curl -fL 'https://oaisdmntprdenmarkeast.blob.core.windows.net/files/00000000-90d8-8210-a3f1-ce17b36351c7/raw?se=2026-09-14T16%3A56%3A36Z&sp=r&sv=2026-02-06&sr=b&scid=01a0a0a1-f3c6-7419-9d6a-96dae2b72741&skoid=d294dba5-36f7-432b-aab8-935656489847&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-09-14T07%3A30%3A28Z&ske=2026-09-15T07%3A30%3A28Z&sks=b&skv=2026-02-06&sig=ioCb5J1cc3ztDBLatNOrKFx11FomK3mKAfebhBH8Ryw%3D' -o assets/venue.jpeg
+            curl -fL 'https://oaisdmntprpolandcentral.blob.core.windows.net/files/00000000-023c-820a-9780-44c073cc0411/raw?se=2026-09-14T16%3A56%3A36Z&sp=r&sv=2026-02-06&sr=b&scid=01a0a0a1-f3c6-7419-9d6a-96dae2b72741&skoid=d294dba5-36f7-432b-aab8-935656489847&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-09-14T07%3A29%3A52Z&ske=2026-09-15T07%3A29%3A52Z&sks=b&skv=2026-02-06&sig=Wb39vcwtWkbBOp5234DJHptNEwEQSz8JBK87ljhQRNY%3D' -o assets/childhood.jpeg
+            curl -fL 'https://oaisdmntpreastus2.blob.core.windows.net/files/00000000-8264-81f6-a02a-307ff3037111/raw?se=2026-09-14T16%3A56%3A36Z&sp=r&sv=2026-02-06&sr=b&scid=01a0a0a1-f3c6-7419-9d6a-96dae2b72741&skoid=d294dba5-36f7-432b-aab8-935656489847&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-09-14T05%3A07%3A01Z&ske=2026-09-15T05%3A07%3A01Z&sks=b&skv=2026-02-06&sig=S2K1Xnm%2B70BeFpdDBwlXW/padZ6oWdmHmela1VLXBMw%3D' -o assets/engagement.jpeg
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add assets
+            git commit -m "Add original invitation photos [skip ci]"
+            git push
+          fi
+      - uses: actions/configure-pages@v5
+        with:
+          enablement: true
+      - name: Prepare site
+        run: |
+          mkdir _site
+          cp index.html style.css script.js _site/
+          cp -r assets _site/
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
